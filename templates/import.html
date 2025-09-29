@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}匯入題目 - 作業系統題庫{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📥 匯入題目</h1>
+    <div>
+        <a href="{{ url_for('import_help') }}" class="btn btn-info">❓ 使用說明</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">← 返回首頁</a>
+    </div>
+</div>
+
+<!-- Flash 訊息 -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📤 上傳題目檔案</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="importForm">
+                    <!-- 匯入方式選擇 -->
+                    <div class="mb-3">
+                        <label class="form-label">匯入方式：<span class="text-danger">*</span></label>
+                        <div class="btn-group w-100" role="group" aria-label="匯入方式選擇">
+                            <input type="radio" class="btn-check" name="import_method" id="method_file" value="file" checked>
+                            <label class="btn btn-outline-primary" for="method_file">📁 上傳檔案</label>
+                            
+                            <input type="radio" class="btn-check" name="import_method" id="method_text" value="text">
+                            <label class="btn btn-outline-success" for="method_text">📝 貼入文字</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="chapter" class="form-label">章節選擇：<span class="text-danger">*</span></label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <select class="form-select" id="chapter" name="chapter" required>
+                                    <option value="">請選擇章節</option>
+                                    <option value="ch1">CH1 - 第一章</option>
+                                    <option value="ch2">CH2 - 第二章</option>
+                                    <option value="ch3">CH3 - 第三章</option>
+                                    <option value="ch4">CH4 - 第四章</option>
+                                    <option value="ch5">CH5 - 第五章</option>
+                                    <option value="ch6">CH6 - 第六章</option>
+                                    <option value="ch7">CH7 - 第七章</option>
+                                    <option value="ch8">CH8 - 第八章</option>
+                                    <option value="ch9">CH9 - 第九章</option>
+                                    <option value="ch10">CH10 - 第十章</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="custom_chapter" placeholder="或輸入自訂章節 (如: ch11)">
+                                <div class="form-text">格式：ch + 數字 (如：ch1, ch2)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 檔案上傳區域 -->
+                    <div class="mb-3" id="file-upload-section">
+                        <label for="file" class="form-label">選擇檔案：<span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".txt">
+                        <div class="form-text">支援 .txt 檔案，編碼格式：UTF-8</div>
+                    </div>
+
+                    <!-- 文字輸入區域 -->
+                    <div class="mb-3" id="text-input-section" style="display: none;">
+                        <label for="text_content" class="form-label">貼入題目內容：<span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="text_content" name="text_content" rows="15" 
+                                  placeholder="請貼入題目內容，格式範例：
+
+題目：作業系統的主要功能不包括以下哪一項？
+你的答案：
+(A) 處理器管理
+正確答案：
+(D) 硬體設計
+得分：10
+
+題目：下列何者是作業系統的核心組件？
+你的答案：
+未作答
+正確答案：
+核心 (Kernel)
+得分：0"></textarea>
+                        <div class="form-text">直接貼入題目文字內容，支援標準題目格式</div>
+                    </div>
+
+                    <!-- 檔案預覽區域 -->
+                    <div id="preview-section" class="mb-3" style="display: none;">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">📋 檔案預覽</h6>
+                            </div>
+                            <div class="card-body" id="preview-content">
+                                <!-- 預覽內容將動態載入 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-info" id="previewBtn">
+                            👀 預覽內容
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            📥 開始匯入
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 匯入須知 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">⚠️ 匯入須知</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>� 檔案上傳要求：</h6>
+                        <ul>
+                            <li>檔案類型：.txt</li>
+                            <li>編碼格式：UTF-8</li>
+                            <li>內容格式：標準題目格式</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>📝 文字貼入要求：</h6>
+                        <ul>
+                            <li>直接複製貼上文字內容</li>
+                            <li>支援標準題目格式</li>
+                            <li>即時預覽解析結果</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>� 標準格式範例：</h6>
+                        <pre class="bg-light p-2 rounded small"><code>題目：這是一個範例題目？
+你的答案：
+選項A
+正確答案：
+正確選項A
+得分：10</code></pre>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h6>🔄 匯入規則：</h6>
+                        <ul>
+                            <li>重複的題目將被自動跳過</li>
+                            <li>沒有正確答案或標記為"未作答"的題目將被跳過</li>
+                            <li>系統會自動偵測題目類型（選擇題/填空題）</li>
+                            <li>匯入後可以在對應章節查看結果</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近匯入記錄 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">📊 目前題庫狀態</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h3 class="text-primary">{{ stats.total_questions }}</h3>
+                        <p class="text-muted">總題數</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-success">{{ stats.chapter_stats|length }}</h3>
+                        <p class="text-muted">章節數</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-info">{{ stats.type_stats.get('選擇題', 0) }}</h3>
+                        <p class="text-muted">選擇題</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-warning">{{ stats.type_stats.get('填空題', 0) }}</h3>
+                        <p class="text-muted">填空題</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chapterSelect = document.getElementById('chapter');
+    const customChapterInput = document.getElementById('custom_chapter');
+    const fileInput = document.getElementById('file');
+    const textContent = document.getElementById('text_content');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewSection = document.getElementById('preview-section');
+    const previewContent = document.getElementById('preview-content');
+    const importForm = document.getElementById('importForm');
+    const methodFile = document.getElementById('method_file');
+    const methodText = document.getElementById('method_text');
+    const fileUploadSection = document.getElementById('file-upload-section');
+    const textInputSection = document.getElementById('text-input-section');
+
+    // 匯入方式切換
+    function toggleImportMethod() {
+        if (methodText.checked) {
+            fileUploadSection.style.display = 'none';
+            textInputSection.style.display = 'block';
+            fileInput.required = false;
+            textContent.required = true;
+        } else {
+            fileUploadSection.style.display = 'block';
+            textInputSection.style.display = 'none';
+            fileInput.required = true;
+            textContent.required = false;
+        }
+    }
+
+    methodFile.addEventListener('change', toggleImportMethod);
+    methodText.addEventListener('change', toggleImportMethod);
+    toggleImportMethod(); // 初始化
+
+    // 自訂章節輸入
+    customChapterInput.addEventListener('input', function() {
+        if (this.value.trim()) {
+            chapterSelect.value = '';
+            // 更新表單的 chapter 值
+            chapterSelect.name = '';
+            this.name = 'chapter';
+        } else {
+            chapterSelect.name = 'chapter';
+            this.name = '';
+        }
+    });
+
+    chapterSelect.addEventListener('change', function() {
+        if (this.value) {
+            customChapterInput.value = '';
+            customChapterInput.name = '';
+            this.name = 'chapter';
+        }
+    });
+
+    // 預覽功能
+    previewBtn.addEventListener('click', function() {
+        const chapter = chapterSelect.value || customChapterInput.value.trim();
+        const isTextMode = methodText.checked;
+
+        if (!chapter) {
+            alert('請選擇或輸入章節');
+            return;
+        }
+
+        let hasContent = false;
+        const formData = new FormData();
+        
+        if (isTextMode) {
+            const text = textContent.value.trim();
+            if (!text) {
+                alert('請貼入題目內容');
+                return;
+            }
+            formData.append('import_method', 'text');
+            formData.append('text_content', text);
+            hasContent = true;
+        } else {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('請先選擇檔案');
+                return;
+            }
+            formData.append('import_method', 'file');
+            formData.append('file', file);
+            hasContent = true;
+        }
+
+        if (!hasContent) return;
+
+        // 顯示載入中
+        previewContent.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p>解析中...</p></div>';
+        previewSection.style.display = 'block';
+
+        fetch('/api/import/preview', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                previewContent.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                return;
+            }
+
+            let html = `<h6>總共找到 ${data.total_questions} 道題目</h6>`;
+            html += `<p class="text-muted">匯入方式：${data.method === 'text' ? '📝 文字貼入' : '📁 檔案上傳'}</p>`;
+            
+            if (data.preview && data.preview.length > 0) {
+                html += '<h6>前 5 題預覽：</h6>';
+                data.preview.forEach((item, index) => {
+                    html += `
+                        <div class="border rounded p-2 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <strong>題目 ${index + 1}</strong>
+                                <span class="badge bg-primary">${item.type}</span>
+                            </div>
+                            <p class="mt-2">${item.question}</p>
+                            <div class="text-success">
+                                <strong>正確答案：</strong>
+                                ${item.answers.map(ans => `<span class="badge bg-success me-1">${ans}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `<div class="alert alert-info mt-3">將匯入到章節：<strong>${chapter.toUpperCase()}</strong></div>`;
+            previewContent.innerHTML = html;
+        })
+        .catch(error => {
+            previewContent.innerHTML = `<div class="alert alert-danger">預覽失敗：${error.message}</div>`;
+        });
+    });
+
+    // 表單提交確認
+    importForm.addEventListener('submit', function(e) {
+        const chapter = chapterSelect.value || customChapterInput.value.trim();
+        const isTextMode = methodText.checked;
+
+        if (!chapter) {
+            e.preventDefault();
+            alert('請選擇或輸入章節');
+            return;
+        }
+
+        // 驗證章節格式
+        if (!/^ch\d{1,2}$/i.test(chapter)) {
+            e.preventDefault();
+            alert('章節格式不正確，請使用 ch1, ch2, ... 等格式');
+            return;
+        }
+
+        // 驗證內容
+        if (isTextMode) {
+            const text = textContent.value.trim();
+            if (!text) {
+                e.preventDefault();
+                alert('請貼入題目內容');
+                return;
+            }
+        } else {
+            const file = fileInput.files[0];
+            if (!file) {
+                e.preventDefault();
+                alert('請選擇檔案');
+                return;
+            }
+        }
+
+        const methodText = isTextMode ? '文字貼入' : '檔案上傳';
+        if (!confirm(`確定要將題目 (${methodText}) 匯入到 ${chapter.toUpperCase()} 嗎？`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

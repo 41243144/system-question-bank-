@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}所有題目 - 作業系統題庫{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📋 所有題目</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← 返回首頁</a>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <strong>📊 總計：</strong> {{ questions|length }} 道題目
+            {% if questions %}
+            <div class="mt-2">
+                {% set chapters = questions|map(attribute='chapter')|list|unique|list %}
+                <strong>涵蓋章節：</strong>
+                {% for chapter in chapters %}
+                    <span class="badge bg-secondary me-1">{{ chapter.upper() }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 篩選和排序 -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="chapter_filter" class="form-label">章節篩選：</label>
+                        <select class="form-select" id="chapter_filter" name="chapter">
+                            <option value="">所有章節</option>
+                            {% set chapters = questions|map(attribute='chapter')|list|unique|list %}
+                            {% for chapter in chapters %}
+                            <option value="{{ chapter }}" {% if request.args.get('chapter') == chapter %}selected{% endif %}>
+                                {{ chapter.upper() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="type_filter" class="form-label">題型篩選：</label>
+                        <select class="form-select" id="type_filter" name="type">
+                            <option value="">所有題型</option>
+                            {% set types = questions|map(attribute='type')|list|unique|list %}
+                            {% for type in types %}
+                            <option value="{{ type }}" {% if request.args.get('type') == type %}selected{% endif %}>
+                                {{ type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="sort" class="form-label">排序方式：</label>
+                        <select class="form-select" id="sort" name="sort">
+                            <option value="id" {% if request.args.get('sort') == 'id' %}selected{% endif %}>ID 順序</option>
+                            <option value="chapter" {% if request.args.get('sort') == 'chapter' %}selected{% endif %}>章節順序</option>
+                            <option value="type" {% if request.args.get('sort') == 'type' %}selected{% endif %}>題型順序</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">套用篩選</button>
+                        <a href="{{ url_for('view_all') }}" class="btn btn-outline-secondary">清除篩選</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if questions %}
+    {% set filtered_questions = questions %}
+    {% if request.args.get('chapter') %}
+        {% set filtered_questions = questions|selectattr('chapter', 'equalto', request.args.get('chapter'))|list %}
+    {% endif %}
+    {% if request.args.get('type') %}
+        {% set filtered_questions = filtered_questions|selectattr('type', 'equalto', request.args.get('type'))|list %}
+    {% endif %}
+    
+    {% for question in filtered_questions %}
+    <div class="card question-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><strong>{{ question.chapter.upper() }} - 題目 {{ question.id }}</strong></span>
+            <div>
+                <span class="badge bg-success question-type-badge">{{ question.chapter.upper() }}</span>
+                <span class="badge bg-primary question-type-badge">{{ question.type }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">{{ question.question }}</h5>
+            
+            {% if question.answers %}
+            <div class="answer-list">
+                <h6 class="text-success">✅ 正確答案：</h6>
+                {% if question.answers|length == 1 %}
+                    <p class="mb-0"><strong>{{ question.answers[0] }}</strong></p>
+                {% else %}
+                    <ol>
+                        {% for answer in question.answers %}
+                        <li><strong>{{ answer }}</strong></li>
+                        {% endfor %}
+                    </ol>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="mt-3">
+                <small class="text-muted">
+                    來源檔案: {{ question.source_file or '未知' }} | 
+                    建立時間: {{ question.created_at }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if filtered_questions|length == 0 %}
+    <div class="alert alert-warning text-center">
+        <h4>😔 沒有符合篩選條件的題目</h4>
+        <p>請調整篩選條件或<a href="{{ url_for('view_all') }}">查看所有題目</a>。</p>
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="alert alert-warning text-center">
+        <h4>😔 目前沒有任何題目</h4>
+        <p>請先匯入題目到資料庫。</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">返回首頁</a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 題目收合功能
+    const questionCards = document.querySelectorAll('.question-card');
+    questionCards.forEach(function(card, index) {
+        const header = card.querySelector('.card-header');
+        const body = card.querySelector('.card-body');
+        
+        header.style.cursor = 'pointer';
+        header.title = '點擊收合/展開';
+        
+        header.addEventListener('click', function() {
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+            } else {
+                body.style.display = 'none';
+            }
+        });
+    });
+
+    // 篩選表單自動提交
+    const filters = document.querySelectorAll('#chapter_filter, #type_filter, #sort');
+    filters.forEach(function(filter) {
+        filter.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}搜尋 - 作業系統題庫{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>🔍 搜尋題目</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← 返回首頁</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🔍 搜尋題目</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('search') }}">
+                    <div class="mb-3">
+                        <label for="search_query" class="form-label">搜尋關鍵字：</label>
+                        <input type="text" class="form-control form-control-lg" id="search_query" 
+                               name="q" placeholder="輸入關鍵字..." required
+                               value="{{ request.args.get('q', '') }}">
+                        <div class="form-text">
+                            可以搜尋題目內容或章節名稱 (例如：ch1, ch2, 記憶體, 處理器 等)
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">🔍 開始搜尋</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">💡 搜尋提示</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>📋 搜尋範圍：</h6>
+                        <ul>
+                            <li>題目內容</li>
+                            <li>章節名稱 (ch1, ch2, ...)</li>
+                            <li>部分關鍵字匹配</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🎯 搜尋技巧：</h6>
+                        <ul>
+                            <li>使用關鍵字而非完整句子</li>
+                            <li>可以搜尋章節名稱快速定位</li>
+                            <li>支援中文關鍵字搜尋</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 常用搜尋 -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">🔥 常用搜尋</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='ch1') }}" class="btn btn-outline-primary btn-sm w-100">CH1</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='ch2') }}" class="btn btn-outline-primary btn-sm w-100">CH2</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='ch3') }}" class="btn btn-outline-primary btn-sm w-100">CH3</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='填空題') }}" class="btn btn-outline-success btn-sm w-100">填空題</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='選擇題') }}" class="btn btn-outline-info btn-sm w-100">選擇題</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='記憶體') }}" class="btn btn-outline-secondary btn-sm w-100">記憶體</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='處理器') }}" class="btn btn-outline-secondary btn-sm w-100">處理器</a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('search', q='排程') }}" class="btn btn-outline-secondary btn-sm w-100">排程</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 自動焦點到搜尋框
+    const searchInput = document.getElementById('search_query');
+    if (searchInput && !searchInput.value) {
+        searchInput.focus();
+    }
+    
+    // Enter 鍵快速搜尋
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

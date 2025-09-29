@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}匯入說明 - 作業系統題庫{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>❓ 匯入題目說明</h1>
+    <div>
+        <a href="{{ url_for('import_questions') }}" class="btn btn-primary">📥 開始匯入</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">← 返回首頁</a>
+    </div>
+</div>
+
+<!-- 快速開始 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">🚀 快速開始</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <h2 class="text-primary">1</h2>
+                                <h6>準備檔案</h6>
+                                <p class="small text-muted">準備 .txt 格式的題目檔案</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <h2 class="text-info">2</h2>
+                                <h6>選擇章節</h6>
+                                <p class="small text-muted">選擇或輸入目標章節</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <h2 class="text-warning">3</h2>
+                                <h6>上傳檔案</h6>
+                                <p class="small text-muted">上傳並預覽檔案內容</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="card border-0">
+                            <div class="card-body">
+                                <h2 class="text-success">4</h2>
+                                <h6>完成匯入</h6>
+                                <p class="small text-muted">確認匯入並查看結果</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 檔案格式說明 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📄 檔案格式說明</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>✅ 支援格式：</h6>
+                        <ul>
+                            <li><strong>檔案類型：</strong> .txt 純文字檔案</li>
+                            <li><strong>編碼格式：</strong> UTF-8 (建議)</li>
+                            <li><strong>內容格式：</strong> 標準題目格式</li>
+                            <li><strong>檔案大小：</strong> 建議小於 10MB</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>❌ 不支援格式：</h6>
+                        <ul>
+                            <li>Word 文件 (.doc, .docx)</li>
+                            <li>Excel 文件 (.xls, .xlsx)</li>
+                            <li>PDF 文件 (.pdf)</li>
+                            <li>其他二進制格式</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 標準格式範例 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">📝 標準格式範例</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>選擇題格式：</h6>
+                        <pre class="bg-light p-3 rounded"><code>題目：作業系統的主要功能不包括以下哪一項？
+你的答案：
+(A) 處理器管理
+正確答案：
+(D) 硬體設計
+得分：10
+
+題目：下列何者是作業系統的核心組件？
+你的答案：
+未作答
+正確答案：
+核心 (Kernel)
+得分：0</code></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>填空題格式：</h6>
+                        <pre class="bg-light p-3 rounded"><code>題目：作業系統中負責管理記憶體的模組稱為[__1__]。
+你的答案：
+記憶體管理器
+正確答案：
+記憶體管理單元
+MMU
+得分：8
+
+題目：[__1__]是作業系統的核心部分。
+你的答案：
+核心
+正確答案：
+Kernel
+核心
+得分：10</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 格式要點 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">⚠️ 重要格式要點</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>🔤 標籤識別：</h6>
+                        <ul>
+                            <li><code>題目：</code> 標示題目開始</li>
+                            <li><code>你的答案：</code> 標示學生答案</li>
+                            <li><code>正確答案：</code> 標示正確答案</li>
+                            <li><code>得分：</code> 標示分數 (可選)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>📋 答案格式：</h6>
+                        <ul>
+                            <li>每個答案占一行</li>
+                            <li>可以有多個正確答案</li>
+                            <li>空行會被忽略</li>
+                            <li>"未作答" 的題目會被跳過</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>🔍 自動偵測：</h6>
+                        <ul>
+                            <li>題目類型自動識別</li>
+                            <li>填空題：包含 <code>[__N__]</code></li>
+                            <li>選擇題：其他格式</li>
+                            <li>重複題目自動跳過</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 章節命名規則 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">📖 章節命名規則</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>✅ 正確格式：</h6>
+                        <ul>
+                            <li><code>ch1</code> - 第一章</li>
+                            <li><code>ch2</code> - 第二章</li>
+                            <li><code>ch10</code> - 第十章</li>
+                            <li><code>CH3</code> - 大小寫不敏感</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>❌ 錯誤格式：</h6>
+                        <ul>
+                            <li><code>chapter1</code> - 太長</li>
+                            <li><code>c1</code> - 缺少 h</li>
+                            <li><code>ch</code> - 沒有數字</li>
+                            <li><code>ch01</code> - 前導零</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 匯入規則 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">⚙️ 匯入規則說明</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🔄 處理邏輯：</h6>
+                        <ul>
+                            <li><strong>重複檢測：</strong> 相同章節的相同題目會被跳過</li>
+                            <li><strong>空答案：</strong> 沒有正確答案的題目會被跳過</li>
+                            <li><strong>未作答：</strong> 標記為"未作答"的題目會被跳過</li>
+                            <li><strong>格式解析：</strong> 自動解析題目和答案</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>📊 匯入結果：</h6>
+                        <ul>
+                            <li><strong>新增題數：</strong> 成功匯入的新題目數量</li>
+                            <li><strong>跳過重複：</strong> 已存在的重複題目數量</li>
+                            <li><strong>跳過未答：</strong> 沒有有效答案的題目數量</li>
+                            <li><strong>自動導向：</strong> 匯入完成後跳轉到對應章節</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 故障排除 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">🔧 常見問題與解決方案</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq1">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                檔案上傳失敗或格式錯誤
+                            </button>
+                        </h2>
+                        <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>確認檔案是 .txt 格式</li>
+                                    <li>檢查檔案編碼是否為 UTF-8</li>
+                                    <li>確認檔案大小不超過限制</li>
+                                    <li>檢查檔案內容是否包含標準格式標籤</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                沒有找到有效題目
+                            </button>
+                        </h2>
+                        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>檢查是否包含"題目："標籤</li>
+                                    <li>確認"正確答案："後面有內容</li>
+                                    <li>檢查標籤的中文符號是否正確</li>
+                                    <li>確認沒有全部都是"未作答"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                章節格式不正確
+                            </button>
+                        </h2>
+                        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>使用格式：ch + 數字 (如：ch1, ch2)</li>
+                                    <li>不要使用前導零 (如：ch01)</li>
+                                    <li>數字範圍：1-99</li>
+                                    <li>大小寫不敏感，但建議使用小寫</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 動作按鈕 -->
+<div class="row">
+    <div class="col-md-12 text-center">
+        <a href="{{ url_for('import_questions') }}" class="btn btn-primary btn-lg me-3">
+            📥 開始匯入題目
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">
+            🏠 返回首頁
+        </a>
+    </div>
+</div>
+{% endblock %}

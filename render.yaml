@@ -1,0 +1,17 @@
+# render.yaml
+services:
+  - type: web
+    name: system-question-bank 
+    env: python
+    plan: free          
+    region: oregon 
+    branch: wenwen
+    autoDeploy: true
+
+    buildCommand: |
+      pip install -U pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2
+      
