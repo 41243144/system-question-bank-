@@ -13,5 +13,5 @@ services:
       pip install -r requirements.txt
 
     startCommand: |
-      gunicorn wsgi:web_app --bind 0.0.0.0:$PORT --workers 2
+      gunicorn web_app:app --bind 0.0.0.0:$PORT --workers 2
       
