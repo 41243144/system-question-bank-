@@ -310,6 +310,23 @@ def create_tables():
     """)
     conn.close()
 
+def delete_question(question_id: int) -> bool:
+    """刪除指定的題目和其答案"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # 由於 FOREIGN KEY CASCADE，刪除題目時會自動刪除相關答案
+        cursor.execute("DELETE FROM questions WHERE id = ?", (question_id,))
+        deleted = cursor.rowcount > 0
+        conn.commit()
+        return deleted
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
 def import_questions_from_entries(entries: List[Dict[str, object]], chapter: str, source_file: str) -> Dict[str, int]:
     """將解析後的題目匯入資料庫"""
     create_tables()  # 確保表格存在
@@ -507,6 +524,33 @@ def import_questions():
 def import_help():
     """匯入說明頁面"""
     return render_template('import_help.html')
+
+@app.route('/api/delete/<int:question_id>', methods=['DELETE'])
+def api_delete_question(question_id):
+    """API: 刪除題目"""
+    try:
+        success = delete_question(question_id)
+        if success:
+            return jsonify({'success': True, 'message': '題目已成功刪除'})
+        else:
+            return jsonify({'success': False, 'message': '找不到指定的題目'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'刪除失敗: {str(e)}'}), 500
+
+@app.route('/delete/<int:question_id>', methods=['POST'])
+def delete_question_form(question_id):
+    """表單方式刪除題目"""
+    try:
+        success = delete_question(question_id)
+        if success:
+            flash('題目已成功刪除', 'success')
+        else:
+            flash('找不到指定的題目', 'error')
+    except Exception as e:
+        flash(f'刪除失敗: {str(e)}', 'error')
+    
+    # 重定向到來源頁面
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/api/import/preview', methods=['POST'])
 def api_import_preview():

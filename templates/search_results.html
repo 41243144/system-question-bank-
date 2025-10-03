@@ -70,9 +70,15 @@
     <div class="card question-card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span><strong>{{ question.chapter.upper() }} - 題目 {{ question.id }}</strong></span>
-            <div>
-                <span class="badge bg-success question-type-badge">{{ question.chapter.upper() }}</span>
-                <span class="badge bg-primary question-type-badge">{{ question.type }}</span>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-success question-type-badge me-1">{{ question.chapter.upper() }}</span>
+                <span class="badge bg-primary question-type-badge me-3">{{ question.type }}</span>
+                <button class="btn btn-danger btn-sm delete-question-btn" 
+                        data-question-id="{{ question.id }}" 
+                        data-question-preview="{{ question.question[:50] }}..."
+                        title="刪除題目">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
         <div class="card-body">
@@ -166,6 +172,31 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- 刪除確認模態框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">⚠️ 確認刪除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>您確定要刪除這個題目嗎？</strong></p>
+                <p class="text-muted" id="questionPreview"></p>
+                <div class="alert alert-warning">
+                    <small>⚠️ 此操作無法復原，題目及其所有答案都會被永久刪除。</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">確認刪除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // 題目收合功能
@@ -174,15 +205,46 @@ document.addEventListener('DOMContentLoaded', function() {
         const header = card.querySelector('.card-header');
         const body = card.querySelector('.card-body');
         
-        header.style.cursor = 'pointer';
-        header.title = '點擊收合/展開';
+        // 為標題區域添加收合功能，但要排除刪除按鈕
+        const titleSpan = header.querySelector('strong').parentElement;
+        titleSpan.style.cursor = 'pointer';
+        titleSpan.title = '點擊收合/展開';
         
-        header.addEventListener('click', function() {
+        titleSpan.addEventListener('click', function(e) {
+            // 確保點擊的不是刪除按鈕
+            if (e.target.closest('.delete-question-btn')) {
+                return;
+            }
+            
             if (body.style.display === 'none') {
                 body.style.display = 'block';
             } else {
                 body.style.display = 'none';
             }
+        });
+    });
+
+    // 刪除題目功能
+    const deleteButtons = document.querySelectorAll('.delete-question-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const deleteForm = document.getElementById('deleteForm');
+    const questionPreview = document.getElementById('questionPreview');
+
+    deleteButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation(); // 防止觸發收合功能
+            
+            const questionId = this.getAttribute('data-question-id');
+            const preview = this.getAttribute('data-question-preview');
+            
+            // 設定刪除表單的 action
+            deleteForm.action = `/delete/${questionId}`;
+            
+            // 顯示題目預覽
+            questionPreview.textContent = preview;
+            
+            // 顯示模態框
+            deleteModal.show();
         });
     });
 });
